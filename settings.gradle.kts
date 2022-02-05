@@ -72,6 +72,7 @@ fun VersionCatalogBuilder.common() {
     alias("kotlinx-coroutines").to("org.jetbrains.kotlinx", "kotlinx-coroutines").versionRef("kotlinx-coroutines")
     alias("kotlinx-atomicfu").to("org.jetbrains.kotlinx", "atomicfu").version("0.17.0")
     alias("kotlin-logging").to("io.github.microutils", "kotlin-logging").version("2.1.21")
+    alias("markdown").to("org.jetbrains", "markdown").version("0.2.4")
 
     bundle("common", listOf("kotlinx-serialization", "kotlinx-coroutines", "kotlinx-atomicfu", "kotlin-logging"))
 }

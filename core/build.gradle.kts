@@ -14,6 +14,7 @@ dependencies {
 
     implementation(libs.bundles.common)
 
+    api(libs.markdown)
     api(libs.kord.cache.api)
     api(libs.kord.cache.map)
 
