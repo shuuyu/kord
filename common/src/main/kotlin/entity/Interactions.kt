@@ -32,7 +32,7 @@ public data class DiscordApplicationCommand(
     @SerialName("dm_permissions")
     val dmPermissions: OptionalBoolean = OptionalBoolean.Missing,
     @SerialName("default_member_permissions")
-    val defaultMemberPermissions: Optional<Permissions> = Optional.Missing(),
+    val defaultMemberPermissions: Optional<Permissions?> = Optional.Missing(),
     val version: Snowflake
 )
 

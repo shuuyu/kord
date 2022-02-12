@@ -8,6 +8,7 @@ import dev.kord.common.entity.optional.OptionalBoolean
 import dev.kord.common.entity.optional.OptionalSnowflake
 import dev.kord.common.entity.optional.mapList
 import dev.kord.common.entity.optional.orEmpty
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,6 +21,10 @@ public data class ApplicationCommandData(
     val guildId: OptionalSnowflake,
     val options: Optional<List<ApplicationCommandOptionData>>,
     val defaultPermission: OptionalBoolean = OptionalBoolean.Missing,
+    @SerialName("dm_permissions")
+    val dmPermissions: OptionalBoolean = OptionalBoolean.Missing,
+    @SerialName("default_member_permissions")
+    val defaultMemberPermissions: Optional<Permissions?> = Optional.Missing(),
     val version: Snowflake
 ) {
     public companion object {
@@ -37,6 +42,8 @@ public data class ApplicationCommandData(
                     guildId,
                     options.mapList { ApplicationCommandOptionData.from(it) },
                     defaultPermission,
+                    dmPermissions,
+                    defaultMemberPermissions,
                     version
                 )
             }

@@ -2,6 +2,7 @@ package dev.kord.core.entity.application
 
 import dev.kord.common.entity.ApplicationCommandType
 import dev.kord.common.entity.ChannelType
+import dev.kord.common.entity.Permissions
 import dev.kord.common.entity.Snowflake
 import dev.kord.common.entity.optional.orEmpty
 import dev.kord.core.behavior.ApplicationCommandBehavior
@@ -38,6 +39,10 @@ public sealed interface ApplicationCommand : ApplicationCommandBehavior {
      * whether the command is enabled by default when the app is added to a guild.
      */
     public val defaultPermission: Boolean? get() = data.defaultPermission.discordBoolean
+
+    public val dmPermissions: Boolean get() = data.dmPermissions.orElse(false)
+
+    public val defaultMemberPermissions: Permissions? get() = data.defaultMemberPermissions.value
 
 
 }
