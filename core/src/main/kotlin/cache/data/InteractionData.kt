@@ -1,26 +1,9 @@
 package dev.kord.core.cache.data
 
+import dev.kord.common.Locale
 import dev.kord.common.annotation.KordExperimental
-import dev.kord.common.entity.ApplicationCommandType
-import dev.kord.common.entity.Choice
-import dev.kord.common.entity.CommandArgument
-import dev.kord.common.entity.CommandGroup
-import dev.kord.common.entity.ComponentType
-import dev.kord.common.entity.DiscordInteraction
-import dev.kord.common.entity.InteractionCallbackData
-import dev.kord.common.entity.InteractionType
-import dev.kord.common.entity.Option
-import dev.kord.common.entity.Permissions
-import dev.kord.common.entity.ResolvedObjects
-import dev.kord.common.entity.Snowflake
-import dev.kord.common.entity.SubCommand
-import dev.kord.common.entity.optional.Optional
-import dev.kord.common.entity.optional.OptionalBoolean
-import dev.kord.common.entity.optional.OptionalSnowflake
-import dev.kord.common.entity.optional.flatMap
-import dev.kord.common.entity.optional.map
-import dev.kord.common.entity.optional.mapValues
-import dev.kord.common.entity.optional.switchOnMissing
+import dev.kord.common.entity.*
+import dev.kord.common.entity.optional.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -41,7 +24,9 @@ public data class InteractionData(
     val token: String,
     val permissions: Optional<Permissions> = Optional.Missing(),
     val version: Int,
-    val message: Optional<MessageData> = Optional.Missing()
+    val message: Optional<MessageData> = Optional.Missing(),
+    val locale: Optional<Locale> = Optional.Missing(),
+    val guildLocale: Optional<Locale> = Optional.Missing()
 ) {
     public companion object {
         public fun from(interaction: DiscordInteraction): InteractionData {
@@ -61,7 +46,9 @@ public data class InteractionData(
                     version,
                     message.map {
                         MessageData.from(it)
-                    }
+                    },
+                    locale,
+                    guildLocale
                 )
             }
         }
@@ -74,7 +61,8 @@ public data class ResolvedObjectsData(
     val users: Optional<Map<Snowflake, UserData>> = Optional.Missing(),
     val roles: Optional<Map<Snowflake, RoleData>> = Optional.Missing(),
     val channels: Optional<Map<Snowflake, ChannelData>> = Optional.Missing(),
-    val messages: Optional<Map<Snowflake, MessageData>> = Optional.Missing()
+    val messages: Optional<Map<Snowflake, MessageData>> = Optional.Missing(),
+    val attachments: Optional<Map<Snowflake, AttachmentData>> = Optional.Missing()
 ) {
     public companion object {
         public fun from(data: ResolvedObjects, guildId: Snowflake?): ResolvedObjectsData {
@@ -83,7 +71,8 @@ public data class ResolvedObjectsData(
                 channels = data.channels.mapValues { ChannelData.from(it.value) },
                 roles = data.roles.mapValues { RoleData.from(guildId!!, it.value) },
                 users = data.users.mapValues { it.value.toData() },
-                messages = data.messages.mapValues { it.value.toData() }
+                messages = data.messages.mapValues { it.value.toData() },
+                attachments = data.attachments.mapValues { AttachmentData.from(it.value) }
             )
         }
     }
@@ -130,6 +119,7 @@ public data class OptionData(
     val name: String,
     @OptIn(KordExperimental::class)
     val value: Optional<CommandArgument<@Serializable(NotSerializable::class) Any?>> = Optional.Missing(),
+    @OptIn(KordExperimental::class)
     val values: Optional<List<CommandArgument<@Serializable(NotSerializable::class) Any?>>> = Optional.Missing(),
     val subCommands: Optional<List<SubCommand>> = Optional.Missing(),
     val focused: OptionalBoolean = OptionalBoolean.Missing

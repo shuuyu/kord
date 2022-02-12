@@ -18,11 +18,7 @@ import dev.kord.core.behavior.interaction.ActionInteractionBehavior
 import dev.kord.core.cache.data.ApplicationInteractionData
 import dev.kord.core.cache.data.InteractionData
 import dev.kord.core.cache.data.ResolvedObjectsData
-import dev.kord.core.entity.Entity
-import dev.kord.core.entity.Member
-import dev.kord.core.entity.Message
-import dev.kord.core.entity.Role
-import dev.kord.core.entity.User
+import dev.kord.core.entity.*
 import dev.kord.core.entity.application.GlobalApplicationCommand
 import dev.kord.core.entity.channel.ResolvedChannel
 import dev.kord.core.supplier.EntitySupplier
@@ -227,6 +223,8 @@ public class ResolvedObjects(
     public val messages: Map<Snowflake, Message>?
         get() = data.messages.mapValues { Message(it.value, kord) }.value
 
+    public val attachments: Map<Snowflake, Attachment>?
+        get() = data.attachments.mapValues { Attachment(it.value, kord) }.value
 }
 
 
@@ -247,6 +245,10 @@ public sealed class OptionValue<out T>(public val value: T, public val focused: 
     public class ChannelOptionValue(value: ResolvedChannel, focused: Boolean) :
         OptionValue<ResolvedChannel>(value, focused) {
         override fun toString(): String = "ChannelOptionValue(value=$value)"
+    }
+
+    public class AttachmentOptionValue(value: Attachment, focused: Boolean) : OptionValue<Attachment>(value, focused) {
+        override fun toString(): String = "AttachmentOptionValue(value=$value)"
     }
 
     public class IntOptionValue(value: Long, focused: Boolean) : OptionValue<Long>(value, focused) {
@@ -279,7 +281,10 @@ public fun OptionValue(value: CommandArgument<*>, resolvedObjects: ResolvedObjec
         is CommandArgument.NumberArgument -> OptionValue.NumberOptionValue(value.value, focused)
         is CommandArgument.BooleanArgument -> OptionValue.BooleanOptionValue(value.value, focused)
         is CommandArgument.IntegerArgument -> OptionValue.IntOptionValue(value.value, focused)
-        is CommandArgument.StringArgument -> OptionValue.StringOptionValue(value.value, focused)
+        is CommandArgument.StringArgument, is CommandArgument.AutoCompleteArgument -> OptionValue.StringOptionValue(
+            value.value as String,
+            focused
+        )
         is CommandArgument.ChannelArgument -> {
             val channel = resolvedObjects?.channels.orEmpty()[value.value]
             requireNotNull(channel) { "channel expected for $value but was missing" }
@@ -315,6 +320,13 @@ public fun OptionValue(value: CommandArgument<*>, resolvedObjects: ResolvedObjec
             requireNotNull(user) { "user expected for $value but was missing" }
 
             OptionValue.UserOptionValue(user, focused)
+        }
+
+        is CommandArgument.AttachmentArgument -> {
+            val attachment = resolvedObjects?.attachments.orEmpty()[value.value]
+            requireNotNull(attachment) { "attachment expected for $value but was missing" }
+
+            OptionValue.AttachmentOptionValue(attachment, focused)
         }
     }
 }

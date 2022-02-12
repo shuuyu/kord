@@ -12,6 +12,7 @@ import dev.kord.core.entity.channel.Channel
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.entity.channel.thread.ThreadChannel
 import dev.kord.core.entity.channel.thread.ThreadMember
+import dev.kord.core.entity.interaction.PublicFollowupMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.datetime.Instant
@@ -24,9 +25,15 @@ import kotlinx.datetime.Instant
 public class StoreEntitySupplier(
     private val supplier: EntitySupplier,
     private val cache: DataCache,
-    private val kord: Kord
 ) : EntitySupplier {
 
+    @Deprecated(
+        "Parameter 'kord' is unused, use other constructor instead.",
+        ReplaceWith("StoreEntitySupplier(supplier, cache)"),
+        DeprecationLevel.ERROR,
+    )
+    @Suppress("UNUSED_PARAMETER")
+    public constructor(supplier: EntitySupplier, cache: DataCache, kord: Kord) : this(supplier, cache)
 
     override val guilds: Flow<Guild>
         get() = storeOnEach(supplier.guilds) { it.data }
@@ -69,11 +76,11 @@ public class StoreEntitySupplier(
         return storeAndReturn(supplier.getMessageOrNull(channelId, messageId)) { it.data }
     }
 
-    override fun getMessagesAfter(messageId: Snowflake, channelId: Snowflake, limit: Int): Flow<Message> {
+    override fun getMessagesAfter(messageId: Snowflake, channelId: Snowflake, limit: Int?): Flow<Message> {
         return storeOnEach(supplier.getMessagesAfter(messageId, channelId, limit)) { it.data }
     }
 
-    override fun getMessagesBefore(messageId: Snowflake, channelId: Snowflake, limit: Int): Flow<Message> {
+    override fun getMessagesBefore(messageId: Snowflake, channelId: Snowflake, limit: Int?): Flow<Message> {
         return storeOnEach(supplier.getMessagesBefore(messageId, channelId, limit)) { it.data }
     }
 
@@ -105,7 +112,7 @@ public class StoreEntitySupplier(
         return storeOnEach(supplier.getGuildBans(guildId)) { it.data }
     }
 
-    override fun getGuildMembers(guildId: Snowflake, limit: Int): Flow<Member> {
+    override fun getGuildMembers(guildId: Snowflake, limit: Int?): Flow<Member> {
         return storeOnEach(supplier.getGuildMembers(guildId, limit)) { it.data }
     }
 
@@ -122,7 +129,7 @@ public class StoreEntitySupplier(
 
     }
 
-    override fun getCurrentUserGuilds(limit: Int): Flow<Guild> {
+    override fun getCurrentUserGuilds(limit: Int?): Flow<Guild> {
         return storeOnEach(supplier.getCurrentUserGuilds(limit)) { it.data }
 
     }
@@ -141,6 +148,15 @@ public class StoreEntitySupplier(
 
     override suspend fun getWebhookWithTokenOrNull(id: Snowflake, token: String): Webhook? {
         return storeAndReturn(supplier.getWebhookWithTokenOrNull(id, token)) { it.data }
+    }
+
+    override suspend fun getWebhookMessageOrNull(
+        webhookId: Snowflake,
+        token: String,
+        messageId: Snowflake,
+        threadId: Snowflake?,
+    ): Message? {
+        return storeAndReturn(supplier.getWebhookMessageOrNull(webhookId, token, messageId, threadId)) { it.data }
     }
 
     override suspend fun getTemplateOrNull(code: String): Template? {
@@ -163,18 +179,18 @@ public class StoreEntitySupplier(
         return storeOnEach(supplier.getActiveThreads(guildId)) { it.data }
     }
 
-    override fun getPublicArchivedThreads(channelId: Snowflake, before: Instant, limit: Int): Flow<ThreadChannel> {
+    override fun getPublicArchivedThreads(channelId: Snowflake, before: Instant?, limit: Int?): Flow<ThreadChannel> {
         return storeOnEach(supplier.getPublicArchivedThreads(channelId, before, limit)) { it.data }
     }
 
-    override fun getPrivateArchivedThreads(channelId: Snowflake, before: Instant, limit: Int): Flow<ThreadChannel> {
+    override fun getPrivateArchivedThreads(channelId: Snowflake, before: Instant?, limit: Int?): Flow<ThreadChannel> {
         return storeOnEach(supplier.getPrivateArchivedThreads(channelId, before, limit)) { it.data }
     }
 
     override fun getJoinedPrivateArchivedThreads(
         channelId: Snowflake,
-        before: Snowflake,
-        limit: Int
+        before: Snowflake?,
+        limit: Int?,
     ): Flow<ThreadChannel> {
         return storeOnEach(supplier.getJoinedPrivateArchivedThreads(channelId, before, limit)) { it.data }
     }
@@ -219,6 +235,16 @@ public class StoreEntitySupplier(
         ) { it.data }
     }
 
+    override suspend fun getFollowupMessageOrNull(
+        applicationId: Snowflake,
+        interactionToken: String,
+        messageId: Snowflake,
+    ): PublicFollowupMessage? {
+        return storeAndReturn(supplier.getFollowupMessageOrNull(applicationId, interactionToken, messageId)) {
+            it.message.data
+        }
+    }
+
     override fun getGuildScheduledEvents(guildId: Snowflake): Flow<GuildScheduledEvent> =
         storeOnEach(supplier.getGuildScheduledEvents(guildId)) { it.data }
 
@@ -242,6 +268,37 @@ public class StoreEntitySupplier(
 
     }
 
+    override fun getGuildScheduledEventUsersBefore(
+        guildId: Snowflake,
+        eventId: Snowflake,
+        before: Snowflake,
+        limit: Int?,
+    ): Flow<User> = storeOnEach(supplier.getGuildScheduledEventUsersBefore(guildId, eventId, before, limit)) { it.data }
+
+    public override fun getGuildScheduledEventUsersAfter(
+        guildId: Snowflake,
+        eventId: Snowflake,
+        after: Snowflake,
+        limit: Int?,
+    ): Flow<User> = storeOnEach(supplier.getGuildScheduledEventUsersAfter(guildId, eventId, after, limit)) { it.data }
+
+    override fun getGuildScheduledEventMembersBefore(
+        guildId: Snowflake,
+        eventId: Snowflake,
+        before: Snowflake,
+        limit: Int?,
+    ): Flow<Member> =
+        storeOnEach(supplier.getGuildScheduledEventMembersBefore(guildId, eventId, before, limit)) { it.data }
+
+    override fun getGuildScheduledEventMembersAfter(
+        guildId: Snowflake,
+        eventId: Snowflake,
+        after: Snowflake,
+        limit: Int?,
+    ): Flow<Member> =
+        storeOnEach(supplier.getGuildScheduledEventMembersAfter(guildId, eventId, after, limit)) { it.data }
+
+
     override fun getGuildApplicationCommandPermissions(
         applicationId: Snowflake,
         guildId: Snowflake
@@ -260,4 +317,7 @@ public class StoreEntitySupplier(
         cache.put(transform(value))
         return value
     }
+
+
+    override fun toString(): String = "StoreEntitySupplier(supplier=$supplier, cache=$cache)"
 }

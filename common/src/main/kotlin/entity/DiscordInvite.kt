@@ -7,10 +7,10 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DiscordInvite(
+public data class DiscordInvite(
     val code: String,
     val guild: Optional<DiscordPartialGuild> = Optional.Missing(),
-    val channel: DiscordChannel,
+    val channel: DiscordChannel?,
     val inviter: Optional<DiscordUser> = Optional.Missing(),
     @SerialName("target_user")
     val targetUser: Optional<DiscordUser> = Optional.Missing(),
@@ -29,7 +29,7 @@ data class DiscordInvite(
 )
 
 @Serializable
-data class DiscordPartialInvite(
+public data class DiscordPartialInvite(
     /*
     Do not trust the docs:
     2020-11-06 This is actually never null, the endpoint(Get Guild Vanity URL) returns
@@ -40,7 +40,7 @@ data class DiscordPartialInvite(
 )
 
 @Serializable
-data class DiscordInviteMetadata(
+public data class DiscordInviteMetadata(
     val uses: Int,
     @SerialName("max_uses")
     val maxUses: Int,

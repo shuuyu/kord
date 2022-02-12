@@ -8,11 +8,9 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.MemberBehavior
 import dev.kord.core.behavior.RoleBehavior
-import dev.kord.core.behavior.channel.GuildChannelBehavior
-import dev.kord.core.behavior.channel.TopGuildChannelBehavior
-import dev.kord.core.behavior.channel.GuildMessageChannelBehavior
-import dev.kord.core.behavior.channel.TopGuildMessageChannelBehavior
 import dev.kord.core.behavior.channel.TextChannelBehavior
+import dev.kord.core.behavior.channel.TopGuildChannelBehavior
+import dev.kord.core.behavior.channel.TopGuildMessageChannelBehavior
 import dev.kord.core.behavior.channel.VoiceChannelBehavior
 import dev.kord.core.cache.data.GuildData
 import dev.kord.core.entity.channel.*
@@ -21,10 +19,10 @@ import dev.kord.core.exception.EntityNotFoundException
 import dev.kord.core.supplier.EntitySupplier
 import dev.kord.core.supplier.EntitySupplyStrategy
 import dev.kord.core.supplier.getChannelOfOrNull
+import dev.kord.core.switchIfEmpty
 import dev.kord.rest.Image
 import dev.kord.rest.service.RestClient
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toInstant
@@ -56,8 +54,8 @@ public class Guild(
     public val threads: Flow<ThreadChannel>
         get() = flow {
             data.threads.mapList {
-               val channel =  Channel.from(it, kord)
-               if(channel is ThreadChannel) emit(channel)
+                val channel = Channel.from(it, kord)
+                if (channel is ThreadChannel) emit(channel)
             }
         }
 
@@ -267,8 +265,13 @@ public class Guild(
     /**
      * The voice region id for the guild.
      */
-    @Deprecated("The region field has been moved to Channel#rtcRegion in Discord API v9", ReplaceWith("Channel#rtcRegion"))
-    public val regionId: String get() = data.region
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        "The region field has been moved to Channel#rtcRegion in Discord API v9",
+        ReplaceWith("Channel#rtcRegion")
+    )
+    public val regionId: String
+        get() = data.region
 
     /**
      * The id of the channel in which a discoverable server's rules should be found
@@ -350,6 +353,17 @@ public class Guild(
      */
     public val nsfw: NsfwLevel get() = data.nsfwLevel
 
+    public val premiumProgressBarEnabled: Boolean get() = data.premiumProgressBarEnabled
+
+    public val stageInstances: Set<StageInstance>
+        get() = data.stageInstances.orEmpty().map { StageInstance(it, kord) }.toSet()
+
+    override val stickers: Flow<GuildSticker>
+        get() = flow {
+            for (sticker in data.stickers.orEmpty()) emit(GuildSticker(sticker, kord))
+        }.switchIfEmpty(super.stickers)
+
+
     /**
      * Requests to get the [VoiceChannel] represented by the [afkChannelId],
      * returns null if the [afkChannelId] isn't present or the channel itself isn't present.
@@ -421,7 +435,7 @@ public class Guild(
      * Gets the discovery splash url in the specified [format], if present.
      */
     public fun getDiscoverySplashUrl(format: Image.Format): String? =
-        data.splash.value?.let { "discovery-splashes/$id/${it}.${format.extension}" }
+        splashHash?.let { "discovery-splashes/$id/${it}.${format.extension}" }
 
     /**
      * Requests to get the splash image in the specified [format], if present.
@@ -471,8 +485,8 @@ public class Guild(
     public suspend fun getPublicUpdatesChannel(): TopGuildMessageChannel? = publicUpdatesChannel?.asChannel()
 
     /**
-     * Requests to get the the channel in which a discoverable server's rules should be found represented
-     *, returns null if the [TopGuildMessageChannel] isn't present, or [rulesChannelId] is null.
+     * Requests to get the channel in which a discoverable server's rules should be found represented,
+     * returns null if the [TopGuildMessageChannel] isn't present, or [rulesChannelId] is null.
      *
      * @throws [RequestException] if anything went wrong during the request.
      */
@@ -494,7 +508,7 @@ public class Guild(
     }
 
     /**
-     * Requests to get the channel where system messages (member joins, server boosts, etc) are sent,
+     * Requests to get the channel where system messages (member joins, server boosts, etc.) are sent,
      * returns null if the [TextChannel] isn't present or the [systemChannelId] is null.
      *
      * @throws [RequestException] if anything went wrong during the request.

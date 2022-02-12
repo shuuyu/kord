@@ -23,12 +23,14 @@ import dev.kord.rest.request.Request
 import dev.kord.rest.request.RequestHandler
 import dev.kord.rest.route.Route
 import dev.kord.rest.service.RestClient
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
-import io.ktor.content.*
-import io.ktor.http.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.request
+import io.ktor.client.statement.HttpStatement
+import io.ktor.client.statement.readText
+import io.ktor.content.TextContent
+import io.ktor.http.ContentType
+import io.ktor.http.takeFrom
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,7 +39,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
@@ -78,7 +80,7 @@ object FakeGateway : Gateway {
     override val coroutineContext: CoroutineContext = SupervisorJob() + EmptyCoroutineContext
 }
 
-class CrashingHandler(val client: HttpClient) : RequestHandler {
+class CrashingHandler(val client: HttpClient, override val token: String) : RequestHandler {
     override suspend fun <B : Any, R> handle(request: Request<B, R>): R {
         if (request.route != Route.CurrentUserGet) throw IllegalStateException("shouldn't do a request")
         val response = client.request<HttpStatement> {
@@ -122,20 +124,20 @@ class CacheMissingRegressions {
     lateinit var kord: Kord
 
     @BeforeTest
-    fun setup() = runBlockingTest { //TODO, move this over to entity supplier tests instead, eventually.
+    fun setup() = runTest { //TODO, move this over to entity supplier tests instead, eventually.
         val token = System.getenv("KORD_TEST_TOKEN")
         val resources = ClientResources(
             token,
             getBotIdFromToken(token),
             Shards(1),
-            null.configure(token),
+            null.configure(),
             EntitySupplyStrategy.cacheWithRestFallback,
         )
         kord = Kord(
             resources,
             MapDataCache().also { it.registerKordData() },
             DefaultMasterGateway(mapOf(0 to FakeGateway)),
-            RestClient(CrashingHandler(resources.httpClient)),
+            RestClient(CrashingHandler(resources.httpClient, resources.token)),
             getBotIdFromToken(token),
             MutableSharedFlow(extraBufferCapacity = Int.MAX_VALUE),
             Dispatchers.Default
