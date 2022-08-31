@@ -13,6 +13,7 @@ dev.kord.common.serialization
 module:core
 dev.kord.core
 dev.kord.core.behavior
+dev.kord.core.behavior.automoderation
 dev.kord.core.behavior.channel
 dev.kord.core.behavior.channel.threads
 dev.kord.core.behavior.interaction
@@ -24,6 +25,7 @@ dev.kord.core.cache
 dev.kord.core.cache.data
 dev.kord.core.entity
 dev.kord.core.entity.application
+dev.kord.core.entity.automoderation
 dev.kord.core.entity.channel
 dev.kord.core.entity.channel.thread
 dev.kord.core.entity.component
@@ -31,6 +33,8 @@ dev.kord.core.entity.interaction
 dev.kord.core.entity.interaction.followup
 dev.kord.core.entity.interaction.response
 dev.kord.core.event
+dev.kord.core.event.automoderation
+dev.kord.core.event.automoderation.data
 dev.kord.core.event.channel
 dev.kord.core.event.channel.data
 dev.kord.core.event.channel.thread
@@ -55,6 +59,7 @@ module:rest
 dev.kord.rest
 dev.kord.rest.builder
 dev.kord.rest.builder.auditlog
+dev.kord.rest.builder.automoderation
 dev.kord.rest.builder.ban
 dev.kord.rest.builder.channel
 dev.kord.rest.builder.channel.thread
