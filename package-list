@@ -54,6 +54,7 @@ dev.kord.core.supplier
 module:gateway
 dev.kord.gateway
 dev.kord.gateway.builder
+dev.kord.gateway.ratelimit
 dev.kord.gateway.retry
 module:rest
 dev.kord.rest
